@@ -1,0 +1,195 @@
+# *************************************************************************
+# Kemal Hakan
+# 03.09.2014
+# Search Text from file and gruping words
+# 
+# *************************************************************************
+#C:\Users\caspers\Desktop\PERL2\documents
+#C:\Users\Kemal\Desktop\documents\
+     use warnings;
+    use strict;
+   use Data::Dumper;
+  use DateTime;
+ use Time::Seconds;
+use Time::HiRes qw/gettimeofday/;
+ use Win32::Console::ANSI;
+  use Term::ANSIColor qw(:constants);
+   use Encode qw(decode encode);
+    use utf8;
+     use Win32::Console;
+      use sigtrap 'handler', \&cleanup, 'normal-signals';
+       require Tk;
+       # binmode STDOUT, ":encoding(cp1254)"; 
+      binmode STDIN, ":encoding(cp1254)";  
+     use switch;
+   while(1){
+  my $Globalseconds= gettimeofday(); 
+ my $Globalstart = $Globalseconds*1000;   
+# print " Open directory :"; 
+    # my $dirname = <STDIN>;   
+         my $CountOfHaciz = 0;
+            my $CountOfTalimat = 0;
+            my $CountOfArastirma = 0; 
+           my $AmountOfHaciz = 0;
+            my $AmountOfTalimat = 0;
+             my $AmountOfArastirma = 0;
+              my $FoundHaciz = 0;
+               my $FoundTalimat = 0;
+                my $FoundArastirma = 0;
+                  my $mw = Tk::MainWindow->new;
+                  #my $dirname = $mw->chooseDirectory(-initialdir => '~', -title => 'Choose a folder');
+                   # $mw->exit; 
+                  # $mw->protocol('WM_DELETE_WINDOW' => sub { Funct(); exit;} );
+                  if (!defined $dirname) { print "No directory selected"; } else { print "Selected $dirname"; } Tk::MainLoop();
+                 # my $dirname = "C:/Users/Kemal/Desktop/All_Documents/";                                                           
+                 &ScanDirectory($dirname); # kendi yazdigimiz bu alt ilk parametrede programin calistirildigi dizinin adresini gonderdik
+              my $Globalsecond2 = gettimeofday();
+            my $Globalfinish = $Globalsecond2*1000;
+         my $Globalelapse = $Globalfinish -$Globalstart;          
+      print "TOTAL Elapsed time : ";
+   print BOLD YELLOW "$Globalelapse ms\n" ,RESET;     
+ print " ............................THE END..........................................\n";
+my $outputs= "C:.../TEST.txt";
+open(FILE ,">> $outputs") || die " Problem openin $outputs file";
+ my $Mol = 100*$FoundHaciz;
+  my $Rate1 = ($Mol)/$AmountOfHaciz;
+   print FILE  "--------Success Rate Of Haciz ----------\n";
+    print FILE " Folder amount : $AmountOfHaciz \n";
+     print FILE " The results found : $FoundHaciz \n";
+      print FILE " Success Rate : % $Rate1 \n"; 
+       print FILE "----------------------------------------\n";
+         $Mol = 100*$FoundArastirma;
+        my $Rate2 = ($Mol)/$AmountOfArastirma;
+       print FILE "--------Success Rate Of Arastirma ------\n";
+     print FILE " Folder amount : $AmountOfArastirma \n";
+  print FILE " The results found : $FoundArastirma \n";
+ print FILE  " Success Rate : % $Rate2 \n"; 
+ print FILE"----------------------------------------\n";
+     $Mol = 100*$FoundTalimat;
+     my $Rate3 = ($Mol)/$AmountOfTalimat;
+       print FILE  "--------Success Rate Of Talimat --------\n";
+     print FILE " Folder amount : $AmountOfTalimat \n";
+  print FILE " The results found : $FoundTalimat \n";
+ print FILE " Success Rate : % $Rate3 \n"; 
+print FILE "----------------------------------------\n";
+  my $AvarageRate = ($Rate1 +  $Rate2 +  $Rate3 )/3;
+   print FILE "The avarage success rate : % $AvarageRate \n ";  
+close(FILE);  
+    sub ScanDirectory{   
+      my ($workdir) = shift; #get first value from @_ which keeps passed arguments
+        print "$workdir uzerinde tarama basladi \n";      
+          my $startdir = $dirname; # basladıgımız dizin
+            chop($startdir);
+            # my $found = 0;
+          chdir($workdir) or die "$workdir dizinine girilemedi:$! \n"; # parametre olarak gonderilen dizini sec
+         opendir(DIR, ".") or die "$workdir dizini acilamadi:$! \n"; # parametre olarak gonderilen dizine gir
+        my @names = readdir(DIR) or die "$workdir dizini okunamadi:$! \n"; # parametre olarak gonderilen dizindeki tum baglantilari(dosyala isimlerini) oku        
+      closedir(DIR); # parametre olarak gonderilen dizini kapat
+    # undef %hash;   
+    
+     foreach my $name (@names){ # okunan isimleri birer birer kontrol et  
+        $CountOfHaciz = 0;
+          $CountOfTalimat = 0;
+           $CountOfArastirma = 0;       
+      my @Haciz = ("haciz","haciz kaldırma","fek","tedbir");      
+        my $Hac = join " ", @Haciz; 
+         my $Haciz = encode("cp1254",$Hac);      
+         #"kanun","maliye","müfettiş","başsavcılığı","savcı","hakim","savcı",                 
+          my @Arastirma = ("bddk","spk","gümrük","vergi dairesi","vergi denetmenleri","hazine müsteşarlığı","emniyet","savcılık","mahkeme","icra müdürlüğü");
+            my $Aras = join " ", @Arastirma; 
+             my $Arastirma = encode("cp1254",$Aras); 
+           my @Talimat = ("eft","havale","virman","kredi","döviz","alış/satış","peşin ithalat","yabancı para transferi","ihracat","teminat mektubu","vergi/ssk","garanti","nakit ödeme"); 
+          my $Tal = join " ", @Talimat; 
+        my  $Talimat = encode("cp1254",$Tal); 
+      my @All_List = (@Haciz,@Arastirma,@Talimat);   
+         
+      print BOLD CYAN "****************---$name---******************\n" ,RESET;  
+                                                                                           
+        next if ($name eq "."); # okunan isim bulundugumuz dizine isaret ediyorsa atla
+         next if ($name eq ".."); # okunan isim bir ust dizine isaret ediyorsa atla                   
+           open( FILE,$name) || die("Dosya acilamiyor : $!"); # dosyayi ac                                  
+            if($name =~ m/ha./ig ) {$AmountOfHaciz++};
+             if($name =~ m/Ar./ig) {$AmountOfArastirma++} ;
+              if($name =~ m/ta./ig) {$AmountOfTalimat++};
+               my @array = <FILE>; 
+                close(FILE);                   
+                my $file1 = join " ", @array;                
+               my $seconds= gettimeofday(); 
+              my $start = $seconds*1000; 
+            my %hash; 
+                                                                                                                                              
+    foreach my $line(@All_List)
+      {                                          
+        $line = encode('cp1254',$line);   
+        while ($file1 =~ m/$line/ig)
+          {$hash{$line}++;}          
+          if (exists $hash{$line}) 
+            {      
+               if($Haciz =~ m/$line/ig)
+                    {     
+                          # $CounterHaciz++;                                                                             
+                                 print BOLD RED "HACIZ !\n",RESET;  
+                                  print Dumper \%hash;  
+                                 $CountOfHaciz +=$hash{$line} ;
+                                                                                                                                   
+                    }                   
+                     elsif($Arastirma =~ m/$line/ig)
+                       {           
+                                  # $CounterArastirma++;                                                                                         
+                                      print BOLD RED "ARASTIRMA!\n",RESET;  
+                                       print Dumper \%hash; 
+                                     $CountOfArastirma += $hash{$line} ;        
+                                                                                                                                  
+                        }
+                         elsif($Talimat =~ m/$line/ig)
+                           {      
+                                 # $CounterTalimat++ ;                                                     
+                                    print BOLD RED "TALIMAT!\n" , RESET;  
+                                 print Dumper \%hash;        
+                              $CountOfTalimat +=$hash{$line} ;                                                  
+                           }                                                      
+                undef %hash;
+            } #End of if condition,
+                               
+                  }  #End of foreach my $line    
+                       
+                    print "$CountOfHaciz,$CountOfArastirma,$CountOfTalimat \n";
+                     my @counter = ($CountOfHaciz,$CountOfTalimat,$CountOfArastirma);                      
+                       foreach my $pid (sort { $b <=> $a } @counter) {                             
+                          if($pid == 0){
+                            last;    }                 
+                             if($pid ==$CountOfHaciz,)                             
+                             {                         
+                               if($FoundHaciz < $AmountOfHaciz){
+                                 $FoundHaciz++; 
+                                  print BOLD GREEN "Bu bir HACIZ yazisidir.!\n",RESET;                                                             
+                                   last;
+                                     }else { last;}                                                 
+                              }                             
+                            if($pid ==$CountOfTalimat)                             
+                           {   
+                               if($FoundTalimat < $AmountOfTalimat){                     
+                                print BOLD GREEN "Bu bir TALIMAT yazisidir.!\n",RESET; 
+                              $FoundTalimat++;                              
+                            last; 
+                           }  else {last;}
+                          } 
+                     if($pid ==$CountOfArastirma)                             
+                    {   
+                      if($FoundArastirma < $AmountOfArastirma){                            
+                          print BOLD GREEN "Bu bir ARASTIRMA yazisidir.!\n",RESET;   
+                           $FoundArastirma++;                           
+                            last;  
+                           }else {last;}                                                        
+                    }                           
+              }                                                                                                                                                   
+                   my $second2 = gettimeofday();
+                  my $finish = $second2*1000;
+                 my $elapse = $finish - $start;          
+                print "Elapsed time : ";
+               print BOLD YELLOW "$elapse ms\n" ,RESET;  
+                    
+    }#End of foreach    
+                                                                                                
+  }#End of subScan      
+}#End of while
